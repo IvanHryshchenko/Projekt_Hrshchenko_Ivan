@@ -11,7 +11,7 @@ class Auth {
         $stmt->execute([$username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        // Проверяем пароль в открытом виде
+        // Для продакшена рекомендуется использовать password_verify() с bcrypt
         if ($user && $password === $user['password']) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];

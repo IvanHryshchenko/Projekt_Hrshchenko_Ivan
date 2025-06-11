@@ -1,3 +1,4 @@
+```php
 <?php
 // Включаем отображение ошибок
 ini_set('display_errors', 1);
@@ -6,18 +7,30 @@ error_reporting(E_ALL);
 session_start();
 
 require_once 'Database.php';
+require_once 'Model.php';
+require_once 'ContentInterface.php';
 require_once 'Article.php';
 require_once 'Auth.php';
+require_once 'NotificationManager.php';
+require_once 'Pagination.php';
 
 // Инициализация классов
 $db = new Database();
 $article = new Article($db);
 $auth = new Auth($db);
+$notification = new NotificationManager();
 
 // Обработка маршрутов
 $action = $_GET['action'] ?? 'list';
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Параметры для пагинации и фильтрации
+$page = max(1, (int)($_GET['page'] ?? 1));
+$perPage = 6;
+$search = $_GET['search'] ?? '';
+$categoryId = (int)($_GET['category'] ?? 0);
+
+// Обработка действий
 if ($action === 'login' && $method === 'POST') {
     if ($auth->login($_POST['username'] ?? '', $_POST['password'] ?? '')) {
         header('Location: ?action=admin');
@@ -30,25 +43,42 @@ if ($action === 'login' && $method === 'POST') {
     header('Location: ?action=list');
     exit;
 } elseif ($action === 'create' && $method === 'POST' && $auth->isLoggedIn()) {
-    $article->create(
-        $_POST['title'] ?? '',
-        $_POST['description'] ?? '',
-        $_POST['author'] ?? ''
-    );
+    $article->create([
+        'title' => $_POST['title'] ?? '',
+        'description' => $_POST['description'] ?? '',
+        'author' => $_POST['author'] ?? '',
+        'category_id' => (int)($_POST['category_id'] ?? 0) ?: null
+    ]);
+    $notification->setNotification('Статья успешно добавлена!');
     header('Location: ?action=admin');
     exit;
 } elseif ($action === 'update' && $method === 'POST' && $auth->isLoggedIn()) {
-    $article->update(
-        (int)($_POST['id'] ?? 0),
-        $_POST['title'] ?? '',
-        $_POST['description'] ?? '',
-        $_POST['author'] ?? ''
-    );
+    $article->update((int)($_POST['id'] ?? 0), [
+        'title' => $_POST['title'] ?? '',
+        'description' => $_POST['description'] ?? '',
+        'author' => $_POST['author'] ?? '',
+        'category_id' => (int)($_POST['category_id'] ?? 0) ?: null
+    ]);
+    $notification->setNotification('Статья успешно обновлена!');
     header('Location: ?action=admin');
     exit;
 } elseif ($action === 'delete' && $auth->isLoggedIn()) {
-    $article->delete((int)($_GET['id'] ?? 0));
+    $id = (int)($_GET['id'] ?? 0);
+    if ($id > 0 && $article->deleteById($id)) {
+        $notification->setNotification('Статья успешно удалена!');
+    } else {
+        $notification->setNotification('Ошибка при удалении статьи!');
+    }
     header('Location: ?action=admin');
+    exit;
+} elseif ($action === 'comment' && $method === 'POST') {
+    $article->addComment(
+        (int)($_POST['article_id'] ?? 0),
+        $_POST['comment_author'] ?? 'Аноним',
+        $_POST['comment_content'] ?? ''
+    );
+    $notification->setNotification('Комментарий добавлен!');
+    header('Location: ?action=list');
     exit;
 }
 ?>
@@ -93,22 +123,88 @@ if ($action === 'login' && $method === 'POST') {
         </div>
     </nav>
 
+    <!-- Уведомления -->
+    <?php if ($message = $notification->getNotification()): ?>
+        <div class="fixed top-4 right-4 bg-green-500 text-white p-4 rounded shadow-lg notification">
+            <?= htmlspecialchars($message) ?>
+        </div>
+    <?php endif; ?>
+
     <!-- Основной контент -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <?php if ($action === 'list'): ?>
+            <!-- Поиск и фильтр по категориям -->
+            <div class="mb-6 flex flex-col sm:flex-row gap-4">
+                <form method="GET" action="?action=list" class="flex-1">
+                    <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Поиск по статьям..."
+                           class="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-neon-pink">
+                </form>
+                <form method="GET" action="?action=list" class="w-full sm:w-48">
+                    <select name="category" onchange="this.form.submit()"
+                            class="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-neon-pink">
+                        <option value="0">Все категории</option>
+                        <?php foreach ($article->getCategories() as $cat): ?>
+                            <option value="<?= $cat['id'] ?>" <?= $categoryId == $cat['id'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cat['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </form>
+            </div>
+
             <h2 class="text-3xl font-poppins text-neon-pink mb-6">Статьи</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <?php foreach ($article->getAll() as $art): ?>
+                <?php
+                $articles = $article->getAll([
+                    'page' => $page,
+                    'perPage' => $perPage,
+                    'search' => $search,
+                    'categoryId' => $categoryId
+                ]);
+                foreach ($articles as $art):
+                ?>
                     <div class="article-card bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-neon transition">
                         <h3 class="text-xl font-semibold text-neon-pink"><?= htmlspecialchars($art['title']) ?></h3>
                         <p class="text-gray-300 mt-2 line-clamp-3"><?= nl2br(htmlspecialchars($art['description'])) ?></p>
                         <p class="text-gray-400 text-sm mt-4">
                             <i class="fas fa-user"></i> Автор: <?= htmlspecialchars($art['author']) ?> | 
                             <i class="fas fa-calendar"></i> <?= $art['created_at'] ?>
+                            <?php if ($art['category_name']): ?>
+                                | <i class="fas fa-tag"></i> <?= htmlspecialchars($art['category_name']) ?>
+                            <?php endif; ?>
                         </p>
+                        <!-- Комментарии -->
+                        <div class="mt-4">
+                            <h4 class="text-lg font-semibold text-gray-300">Комментарии</h4>
+                            <?php foreach ($article->getComments($art['id']) as $comment): ?>
+                                <div class="comment bg-gray-700 p-3 rounded mt-2">
+                                    <p class="text-sm text-gray-400">
+                                        <i class="fas fa-user"></i> <?= htmlspecialchars($comment['author']) ?> | 
+                                        <i class="fas fa-clock"></i> <?= $comment['created_at'] ?>
+                                    </p>
+                                    <p class="text-gray-300"><?= nl2br(htmlspecialchars($comment['content'])) ?></p>
+                                </div>
+                            <?php endforeach; ?>
+                            <form method="POST" action="?action=comment" class="mt-4 space-y-2">
+                                <input type="hidden" name="article_id" value="<?= $art['id'] ?>">
+                                <input type="text" name="comment_author" placeholder="Ваше имя" required
+                                       class="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-neon-pink">
+                                <textarea name="comment_content" placeholder="Ваш комментарий" required
+                                          class="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-neon-pink h-20"></textarea>
+                                <button type="submit" class="bg-neon-pink text-gray-900 py-2 px-4 rounded hover:bg-neon-pink-dark transition">
+                                    <i class="fas fa-comment"></i> Добавить комментарий
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>
+
+            <!-- Пагинация -->
+            <?php
+            $pagination = new Pagination($article->getTotal($search, $categoryId), $perPage, $page);
+            echo $pagination->render('?action=list', ['search' => $search, 'category' => $categoryId]);
+            ?>
 
         <?php elseif ($action === 'login'): ?>
             <div class="max-w-md mx-auto bg-gray-800 rounded-lg shadow-lg p-8">
@@ -155,6 +251,16 @@ if ($action === 'login' && $method === 'POST') {
                         <input type="text" id="author" name="author" placeholder="Введите автора" required
                                class="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-neon-pink">
                     </div>
+                    <div>
+                        <label for="category_id" class="block text-gray-300">Категория</label>
+                        <select id="category_id" name="category_id"
+                                class="w-full px-4 py-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-neon-pink">
+                            <option value="">Без категории</option>
+                            <?php foreach ($article->getCategories() as $cat): ?>
+                                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <button type="submit" class="bg-neon-pink text-gray-900 py-2 px-6 rounded hover:bg-neon-pink-dark transition">
                         <i class="fas fa-plus"></i> Добавить
                     </button>
@@ -183,6 +289,18 @@ if ($action === 'login' && $method === 'POST') {
                                     <input type="text" id="author-<?= $art['id'] ?>" name="author" value="<?= htmlspecialchars($art['author']) ?>" required
                                            class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-neon-pink">
                                 </div>
+                                <div>
+                                    <label for="category_id-<?= $art['id'] ?>" class="block text-gray-300">Категория</label>
+                                    <select id="category_id-<?= $art['id'] ?>" name="category_id"
+                                            class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-neon-pink">
+                                        <option value="">Без категории</option>
+                                        <?php foreach ($article->getCategories() as $cat): ?>
+                                            <option value="<?= $cat['id'] ?>" <?= $art['category_id'] == $cat['id'] ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($cat['name']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                                 <div class="flex space-x-4">
                                     <button type="submit" class="bg-neon-pink text-gray-900 py-2 px-4 rounded hover:bg-neon-pink-dark transition">
                                         <i class="fas fa-edit"></i> Редактировать
@@ -209,8 +327,21 @@ if ($action === 'login' && $method === 'POST') {
     <!-- Футер -->
     <footer class="bg-gray-800 py-4 mt-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-400">
-            <p>&copy; 2025 Поп-культура. Все права защищены.</p>
+            <p>© 2025 Поп-культура. Все права защищены.</p>
         </div>
     </footer>
+
+    <!-- Скрипт для автозакрытия уведомлений -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const notification = document.querySelector('.notification');
+            if (notification) {
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+        });
+    </script>
 </body>
 </html>

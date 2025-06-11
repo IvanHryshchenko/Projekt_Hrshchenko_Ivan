@@ -1,3 +1,4 @@
+```php
 <?php
 abstract class Model {
     protected Database $db;
@@ -11,7 +12,7 @@ abstract class Model {
     protected function findById(int $id): ?array {
         $stmt = $this->db->getPdo()->prepare("SELECT * FROM {$this->table} WHERE id = ?");
         $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     protected function deleteById(int $id): bool {

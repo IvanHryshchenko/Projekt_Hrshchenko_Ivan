@@ -1,24 +1,185 @@
-:root {
-    --pink-600: #ec4899;
-    --gray-800: #1f2937;
+/* Определение кастомных цветов для тем */
+body[data-theme="black-red"] {
+    --background-color: #000000;
+    --text-color: #ff0000;
+    --accent-color: #ff0000;
+    --neon-glow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000;
+    --card-background: #1a1a1a;
+    --input-background: #2a2a2a;
 }
 
+body[data-theme="blue"] {
+    --background-color: #000033;
+    --text-color: #00ccff;
+    --accent-color: #00ccff;
+    --neon-glow: 0 0 10px #00ccff, 0 0 20px #00ccff, 0 0 30px #00ccff;
+    --card-background: #1a1a33;
+    --input-background: #2a2a3f;
+}
+
+body[data-theme="green"] {
+    --background-color: #003300;
+    --text-color: #00ff00;
+    --accent-color: #00ff00;
+    --neon-glow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00;
+    --card-background: #1a331a;
+    --input-background: #2a3f2a;
+}
+
+body[data-theme="purple"] {
+    --background-color: #330033;
+    --text-color: #cc00ff;
+    --accent-color: #cc00ff;
+    --neon-glow: 0 0 10px #cc00ff, 0 0 20px #cc00ff, 0 0 30px #cc00ff;
+    --card-background: #331a33;
+    --input-background: #3f2a3f;
+}
+
+body[data-theme="yellow"] {
+    --background-color: #333300;
+    --text-color: #ffff00;
+    --accent-color: #ffff00;
+    --neon-glow: 0 0 10px #ffff00, 0 0 20px #ffff00, 0 0 30px #ffff00;
+    --card-background: #33331a;
+    --input-background: #3f3f2a;
+}
+
+body[data-theme="orange"] {
+    --background-color: #331100;
+    --text-color: #ff6600;
+    --accent-color: #ff6600;
+    --neon-glow: 0 0 10px #ff6600, 0 0 20px #ff6600, 0 0 30px #ff6600;
+    --card-background: #331a1a;
+    --input-background: #3f2a2a;
+}
+
+body[data-theme="pink"] {
+    --background-color: #330022;
+    --text-color: #ff00cc;
+    --accent-color: #ff00cc;
+    --neon-glow: 0 0 10px #ff00cc, 0 0 20px #ff00cc, 0 0 30px #ff00cc;
+    --card-background: #331a2a;
+    --input-background: #3f2a3a;
+}
+
+body[data-theme="cyan"] {
+    --background-color: #003333;
+    --text-color: #00ffff;
+    --accent-color: #00ffff;
+    --neon-glow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff;
+    --card-background: #1a3333;
+    --input-background: #2a3f3f;
+}
+
+/* Общие стили */
 body {
-    background: linear-gradient(135deg, #111827, #374151);
+    background: linear-gradient(135deg, var(--background-color) 0%, #0f3460 100%);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
 }
 
-h1, h2, h3 {
-    color: var(--pink-600);
+/* Неоновые стили для заголовков */
+h1, h2, h3, h4 {
+    color: var(--accent-color);
+    text-shadow: var(--neon-glow);
 }
 
-.bg-gray-800 {
-    background-color: var(--gray-800);
+/* Стили для навигации */
+nav {
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
 }
 
-.hover\:bg-pink-700:hover {
-    background-color: #db2777;
+/* Стили для карточек статей */
+.article-card {
+    background-color: var(--card-background);
+    border-radius: 8px;
+    padding: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.article-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--neon-glow);
+}
+
+/* Стили для кнопок и ссылок */
+button, a.bg-neon-pink, a.bg-red-500 {
+    background-color: var(--accent-color);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 5px;
+    border: none;
+    text-shadow: var(--neon-glow);
+    transition: box-shadow 0.3s ease;
+}
+
+button:hover, a.bg-neon-pink:hover, a.bg-red-500:hover {
+    box-shadow: var(--neon-glow);
+}
+
+/* Стили для поля ввода и текстового поля */
+input, textarea {
+    background-color: var(--input-background);
+    color: var(--text-color);
+    border: 1px solid var(--accent-color);
+    border-radius: 5px;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+textarea {
+    height: 120px;
+    resize: none;
+}
+
+/* Стили для переключателя тем */
+.theme-switcher {
+    position: relative;
+    cursor: pointer;
+}
+
+.theme-switcher i {
+    font-size: 1.5rem;
+    color: var(--accent-color);
+    text-shadow: var(--neon-glow);
+    transition: transform 0.2s ease;
+}
+
+.theme-switcher:hover i {
+    transform: scale(1.2);
+}
+
+.theme-options {
+    display: none;
+    position: absolute;
+    top: 2rem;
+    right: 0;
+    background-color: var(--background-color);
+    border: 1px solid var(--accent-color);
+    border-radius: 5px;
+    padding: 10px;
+    box-shadow: var(--neon-glow);
+    z-index: 1000;
+    min-width: 150px;
+}
+
+.theme-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--text-color);
+    border-radius: 3px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.theme-option:hover {
+    background-color: var(--accent-color);
+    color: var(--background-color);
+    text-shadow: none;
+}
+
+/* Усечение текста для описания */
 .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -26,19 +187,18 @@ h1, h2, h3 {
     overflow: hidden;
 }
 
-.transition {
-    transition: all 0.3s ease;
-}
-
-.shadow-lg {
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-}
-
-.hover\:shadow-lg:hover {
-    box-shadow: 0 15px 25px rgba(236, 72, 153, 0.3);
-}
-
+/* Адаптивность */
 @media (max-width: 640px) {
-    h2 { font-size: 1.5rem; }
-    .grid { grid-template-columns: 1fr; }
+    h1 {
+        font-size: 1.5rem;
+    }
+    h2 {
+        font-size: 1.75rem;
+    }
+    .article-card {
+        padding: 1rem;
+    }
+    .theme-options {
+        min-width: 120px;
+    }
 }

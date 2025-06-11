@@ -9,9 +9,9 @@ abstract class Model {
     }
 
     protected function findById(int $id): ?array {
-        $stmt = $this->db->getPdo()->prepare("SELECT * FROM {$this->table} WHERE id = ? LIMIT 1");
+        $stmt = $this->db->getPdo()->prepare("SELECT * FROM {$this->table} WHERE id = ?");
         $stmt->execute([$id]);
-        return $stmt->fetch() ?: null;
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     protected function deleteById(int $id): bool {

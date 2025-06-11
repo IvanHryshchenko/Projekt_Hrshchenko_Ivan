@@ -1,23 +1,20 @@
 <?php
 class Database {
     private PDO $pdo;
-
-    public function __construct(string $host, string $dbName, string $user, string $pass) {
+    
+    public function __construct() {
         try {
             $this->pdo = new PDO(
-                "mysql:host=$host;dbname=$dbName;charset=utf8mb4",
-                $user,
-                $pass,
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-                ]
-            );
+    'mysql:host=localhost;dbname=popculture_db;charset=utf8mb4',
+    'root', 
+    '',    
+    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+);
         } catch (PDOException $e) {
-            die("Ошибка подключения: " . $e->getMessage());
+            die("Connection failed: " . $e->getMessage());
         }
     }
-
+    
     public function getPdo(): PDO {
         return $this->pdo;
     }

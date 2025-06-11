@@ -1,34 +1,25 @@
 <?php
+// Включаем отображение ошибок
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
 
-require_once 'config.php';
 require_once 'Database.php';
 require_once 'Article.php';
 require_once 'Auth.php';
-require_once 'Notification.php';
 
-try {
-    $db = new Database(DB_HOST, DB_NAME, DB_USER, DB_PASS);
-    $article = new Article($db);
-    $auth = new Auth($db);
-    $notification = new Notification();
-} catch (Exception $e) {
-    die("Ошибка инициализации: " . $e->getMessage());
-}
+// Инициализация классов
+$db = new Database();
+$article = new Article($db);
+$auth = new Auth($db);
 
+// Обработка маршрутов
 $action = $_GET['action'] ?? 'list';
 $method = $_SERVER['REQUEST_METHOD'];
 
-$page = max(1, (int)($_GET['page'] ?? 1));
-$perPage = 6;
-$search = $_GET['search'] ?? '';
-$categoryId = (int)($_GET['category'] ?? 0);
-
 if ($action === 'login' && $method === 'POST') {
-    if ($auth->login($_POST['username'], $_POST['password'])) {
+    if ($auth->login($_POST['username'] ?? '', $_POST['password'] ?? '')) {
         header('Location: ?action=admin');
         exit;
     } else {
@@ -39,54 +30,39 @@ if ($action === 'login' && $method === 'POST') {
     header('Location: ?action=list');
     exit;
 } elseif ($action === 'create' && $method === 'POST' && $auth->isLoggedIn()) {
-    $data = [
-        'title' => trim($_POST['title']),
-        'description' => trim($_POST['description']),
-        'author' => trim($_POST['author']),
-        'category_id' => $_POST['category_id'] ?: null
-    ];
-    if ($article->create($data)) {
-        $notification->set('Статья добавлена!');
-    } else {
-        $notification->set('Ошибка добавления статьи!');
-    }
+    $article->create(
+        ['title' => $_POST['title'] ?? '', 'description' => $_POST['description'] ?? '', 'author' => $_POST['author'] ?? '']
+    );
     header('Location: ?action=admin');
     exit;
 } elseif ($action === 'update' && $method === 'POST' && $auth->isLoggedIn()) {
-    $id = (int)($_POST['id']);
-    $data = [
-        'title' => trim($_POST['title']),
-        'description' => trim($_POST['description']),
-        'author' => trim($_POST['author']),
-        'category_id' => $_POST['category_id'] ?: null
-    ];
-    if ($article->update($id, $data)) {
-        $notification->set('Статья обновлена!');
-    } else {
-        $notification->set('Ошибка обновления статьи!');
-    }
+    $article->update(
+        (int)($_POST['id'] ?? 0),
+        ['title' => $_POST['title'] ?? '', 'description' => $_POST['description'] ?? '', 'author' => $_POST['author'] ?? '']
+    );
     header('Location: ?action=admin');
     exit;
 } elseif ($action === 'delete' && $auth->isLoggedIn()) {
-    $id = (int)($_GET['id']);
-    if ($article->delete($id)) {
-        $notification->set('Статья удалена!');
-    } else {
-        $notification->set('Ошибка удаления статьи!');
-    }
+    $article->delete((int)($_GET['id'] ?? 0));
     header('Location: ?action=admin');
     exit;
-} elseif ($action === 'comment' && $method === 'POST') {
-    if ($article->addComment($_POST['article_id'], $_POST['comment_author'], $_POST['comment_content'])) {
-        $notification->set('Комментарий добавлен!');
-    }
+} elseif ($action === 'like' && $auth->isLoggedIn()) {
+    $article->like((int)($_GET['id'] ?? 0), $_SESSION['user_id']);
+    header('Location: ?action=list');
+    exit;
+} elseif ($action === 'unlike' && $auth->isLoggedIn()) {
+    $article->unlike((int)($_GET['id'] ?? 0), $_SESSION['user_id']);
+    header('Location: ?action=list');
+    exit;
+} elseif ($action === 'comment' && $method === 'POST' && $auth->isLoggedIn()) {
+    $article->addComment((int)($_GET['id'] ?? 0), $_SESSION['user_id'], $_POST['content'] ?? '');
     header('Location: ?action=list');
     exit;
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -96,237 +72,214 @@ if ($action === 'login' && $method === 'POST') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-900 text-white font-inter">
+<body class="font-inter" data-theme="blue">
     <nav class="bg-gray-800 py-4 shadow-lg sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <h1 class="text-2xl font-poppins text-pink-600">Поп-культура</h1>
-            <div class="space-x-4">
-                <a href="?action=list" class="text-gray-300 hover:text-pink-600 <?= $action === 'list' ? 'font-bold' : '' ?>">
+            <h1 class="text-2xl font-poppins">Поп-культура</h1>
+            <div class="flex items-center space-x-4">
+                <a href="?action=list" class="text-gray-300 hover:text-neon-pink transition">
                     <i class="fas fa-home"></i> Главная
                 </a>
                 <?php if ($auth->isLoggedIn()): ?>
-                    <a href="?action=admin" class="text-gray-300 hover:text-pink-600 <?= $action === 'admin' ? 'font-bold' : '' ?>">
-                        <i class="fas fa-user-shield"></i> Админ
+                    <a href="?action=admin" class="text-gray-300 hover:text-neon-pink transition">
+                        <i class="fas fa-user-shield"></i> Админ-панель
                     </a>
-                    <a href="?action=logout" class="text-gray-300 hover:text-pink-600">
+                    <a href="?action=logout" class="text-gray-300 hover:text-neon-pink transition">
                         <i class="fas fa-sign-out-alt"></i> Выйти
                     </a>
                 <?php else: ?>
-                    <a href="?action=login" class="text-gray-300 hover:text-pink-600 <?= $action === 'login' ? 'font-bold' : '' ?>">
+                    <a href="?action=login" class="text-gray-300 hover:text-neon-pink transition">
                         <i class="fas fa-sign-in-alt"></i> Войти
                     </a>
                 <?php endif; ?>
+                <!-- Переключатель тем -->
+                <div class="theme-switcher">
+                    <i class="fas fa-palette"></i>
+                    <div class="theme-options">
+                        <div class="theme-option" data-theme="black-red">Черно-красная</div>
+                        <div class="theme-option" data-theme="blue">Синяя</div>
+                        <div class="theme-option" data-theme="green">Зеленая</div>
+                        <div class="theme-option" data-theme="purple">Фиолетовая</div>
+                        <div class="theme-option" data-theme="yellow">Желтая</div>
+                        <div class="theme-option" data-theme="orange">Оранжевая</div>
+                        <div class="theme-option" data-theme="pink">Розовая</div>
+                        <div class="theme-option" data-theme="cyan">Голубая</div>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
 
-    <?php if ($message = $notification->get()): ?>
-        <div class="fixed top-4 right-4 bg-green-500 text-white p-3 rounded shadow-lg transition-opacity duration-300" id="notification">
-            <?= htmlspecialchars($message) ?>
-        </div>
-    <?php endif; ?>
-
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <?php if ($action === 'list'): ?>
-            <div class="mb-6 flex flex-col sm:flex-row gap-4">
-                <form method="GET" action="" class="flex-1">
-                    <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Поиск..."
-                           class="w-full px-4 py-2 bg-gray-800 text-white rounded focus:outline-none focus:ring-2 focus:ring-pink-600">
-                </form>
-                <form method="GET" action="" class="w-full sm:w-48">
-                    <select name="category" onchange="this.form.submit()"
-                            class="w-full px-4 py-2 bg-gray-800 text-white rounded focus:outline-none focus:ring-2 focus:ring-pink-600">
-                        <option value="0">Все категории</option>
-                        <?php foreach ($article->getCategories() as $cat): ?>
-                            <option value="<?= $cat['id'] ?>" <?= $categoryId == $cat['id'] ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($cat['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </form>
-            </div>
-
-            <h2 class="text-3xl font-poppins text-pink-600 mb-6">Статьи</h2>
+            <h2 class="text-3xl font-poppins mb-6">Статьи</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <?php
-                $articles = $article->getAll($page, $perPage, $search, $categoryId);
-                if (empty($articles)) {
-                    echo '<p class="text-center text-gray-500">Статьи не найдены.</p>';
-                } else {
-                    foreach ($articles as $art): ?>
-                        <div class="bg-gray-800 rounded-lg p-4 shadow hover:shadow-lg transition">
-                            <h3 class="text-xl font-semibold text-pink-600"><?= htmlspecialchars($art['title']) ?></h3>
-                            <p class="text-gray-400 mt-2 line-clamp-3"><?= htmlspecialchars($art['description']) ?></p>
-                            <p class="text-gray-500 text-sm mt-2">
-                                <i class="fas fa-user"></i> <?= htmlspecialchars($art['author']) ?> | 
-                                <i class="fas fa-calendar"></i> <?= $art['created_at'] ?>
-                                <?php if ($art['category_name']): ?>
-                                    | <i class="fas fa-tag"></i> <?= htmlspecialchars($art['category_name']) ?>
+                <?php foreach ($article->getAll() as $art): ?>
+                    <div class="article-card rounded-lg shadow-lg p-6 hover:shadow-neon transition">
+                        <h3 class="text-xl font-semibold"><?= htmlspecialchars($art['title']) ?></h3>
+                        <p class="mt-2 line-clamp-3"><?= nl2br(htmlspecialchars($art['description'])) ?></p>
+                        <p class="text-sm mt-4">
+                            <i class="fas fa-user"></i> Автор: <?= htmlspecialchars($art['author']) ?> | 
+                            <i class="fas fa-calendar"></i> <?= $art['created_at'] ?>
+                        </p>
+                        <div class="mt-4">
+                            <span>
+                                <i class="fas fa-heart"></i> Лайков: <?= $article->getLikes($art['id']) ?>
+                            </span>
+                            <?php if ($auth->isLoggedIn()): ?>
+                                <?php if ($article->hasLiked($art['id'], $_SESSION['user_id'])): ?>
+                                    <a href="?action=unlike&id=<?= $art['id'] ?>" class="ml-2 hover:text-red-600">
+                                        <i class="fas fa-heart-broken"></i> Убрать лайк
+                                    </a>
+                                <?php else: ?>
+                                    <a href="?action=like&id=<?= $art['id'] ?>" class="ml-2 hover:text-neon-pink-dark">
+                                        <i class="fas fa-heart"></i> Лайк
+                                    </a>
                                 <?php endif; ?>
-                            </p>
-                            <div class="mt-4">
-                                <h4 class="text-lg font-semibold text-gray-300">Комментарии</h4>
-                                <?php $comments = $article->getComments($art['id']);
-                                if (empty($comments)) {
-                                    echo '<p class="text-gray-500">Нет комментариев.</p>';
-                                } else {
-                                    foreach ($comments as $comment): ?>
-                                        <div class="bg-gray-700 p-2 rounded mt-2">
-                                            <p class="text-sm text-gray-400">
-                                                <i class="fas fa-user"></i> <?= htmlspecialchars($comment['author']) ?> | 
-                                                <i class="fas fa-clock"></i> <?= $comment['created_at'] ?>
-                                            </p>
-                                            <p class="text-gray-300"><?= htmlspecialchars($comment['content']) ?></p>
-                                        </div>
-                                    <?php endforeach;
-                                } ?>
-                                <form method="POST" action="?action=comment" class="mt-4 space-y-2">
-                                    <input type="hidden" name="article_id" value="<?= $art['id'] ?>">
-                                    <input type="text" name="comment_author" placeholder="Ваше имя" required
-                                           class="w-full px-3 py-1 bg-gray-700 text-white rounded">
-                                    <textarea name="comment_content" placeholder="Комментарий" required
-                                              class="w-full px-3 py-1 bg-gray-700 text-white rounded h-16"></textarea>
-                                    <button type="submit" class="bg-pink-600 text-white px-3 py-1 rounded hover:bg-pink-700">
+                            <?php endif; ?>
+                        </div>
+                        <div class="mt-4">
+                            <h4 class="text-lg font-semibold">Комментарии</h4>
+                            <?php foreach ($article->getComments($art['id']) as $comment): ?>
+                                <div class="p-2 rounded mt-2">
+                                    <p><?= htmlspecialchars($comment['content']) ?></p>
+                                    <p class="text-sm">
+                                        <i class="fas fa-user"></i> <?= htmlspecialchars($comment['username']) ?> | 
+                                        <i class="fas fa-calendar"></i> <?= $comment['created_at'] ?>
+                                    </p>
+                                </div>
+                            <?php endforeach; ?>
+                            <?php if ($auth->isLoggedIn()): ?>
+                                <form method="POST" action="?action=comment&id=<?= $art['id'] ?>" class="mt-2">
+                                    <textarea name="content" placeholder="Ваш комментарий" required></textarea>
+                                    <button type="submit" class="mt-2 py-2 px-4 rounded">
                                         <i class="fas fa-comment"></i> Добавить
                                     </button>
                                 </form>
-                            </div>
+                            <?php endif; ?>
                         </div>
-                    <?php endforeach;
-                } ?>
+                    </div>
+                <?php endforeach; ?>
             </div>
-            <?php echo $article->renderPagination($page, $perPage, $search, $categoryId); ?>
 
         <?php elseif ($action === 'login'): ?>
-            <div class="max-w-md mx-auto bg-gray-800 rounded-lg p-6 shadow-lg mt-10">
-                <h2 class="text-2xl font-poppins text-pink-600 mb-4 text-center">Вход</h2>
+            <div class="max-w-md mx-auto rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-poppins mb-6 text-center">Вход</h2>
                 <?php if (isset($error)): ?>
-                    <p class="bg-red-500 text-white p-2 rounded mb-4"><?= htmlspecialchars($error) ?></p>
+                    <p class="error text-white p-4 rounded mb-4"><?= htmlspecialchars($error) ?></p>
                 <?php endif; ?>
-                <form method="POST" action="" class="space-y-4">
+                <form method="POST" action="?action=login" class="space-y-4">
                     <div>
-                        <label for="username" class="block text-gray-300">Имя пользователя</label>
-                        <input type="text" id="username" name="username" required
-                               class="w-full px-3 py-1 bg-gray-700 text-white rounded">
+                        <label for="username" class="block">Имя пользователя</label>
+                        <input type="text" id="username" name="username" placeholder="Введите имя пользователя" required
+                               class="w-full px-4 py-2 rounded focus:outline-none">
                     </div>
                     <div>
-                        <label for="password" class="block text-gray-300">Пароль</label>
-                        <input type="password" id="password" name="password" required
-                               class="w-full px-3 py-1 bg-gray-700 text-white rounded">
+                        <label for="password" class="block">Пароль</label>
+                        <input type="password" id="password" name="password" placeholder="Введите пароль" required
+                               class="w-full px-4 py-2 rounded focus:outline-none">
                     </div>
-                    <button type="submit" class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700">
+                    <button type="submit" class="w-full py-2 rounded">
                         <i class="fas fa-sign-in-alt"></i> Войти
                     </button>
                 </form>
             </div>
 
         <?php elseif ($action === 'admin' && $auth->isLoggedIn()): ?>
-            <div class="bg-gray-800 rounded-lg p-6 shadow-lg mt-10">
-                <h2 class="text-2xl font-poppins text-pink-600 mb-4">Админ-панель</h2>
-                <h3 class="text-lg font-semibold text-gray-300 mb-3">Добавить статью</h3>
-                <form method="POST" action="" class="space-y-4 mb-6">
+            <div class="rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-poppins mb-6">Админ-панель</h2>
+                <h3 class="text-xl font-semibold mb-4">Добавить статью</h3>
+                <form method="POST" action="?action=create" class="space-y-4 mb-8">
                     <div>
-                        <label for="title" class="block text-gray-300">Заголовок</label>
-                        <input type="text" id="title" name="title" required
-                               class="w-full px-3 py-1 bg-gray-700 text-white rounded">
+                        <label for="title" class="block">Заголовок</label>
+                        <input type="text" id="title" name="title" placeholder="Введите заголовок" required
+                               class="w-full px-4 py-2 rounded focus:outline-none">
                     </div>
                     <div>
-                        <label for="description" class="block text-gray-300">Описание</label>
-                        <textarea id="description" name="description" required
-                                  class="w-full px-3 py-1 bg-gray-700 text-white rounded h-24"></textarea>
+                        <label for="description" class="block">Описание</label>
+                        <textarea id="description" name="description" placeholder="Введите описание" required
+                                  class="w-full px-4 py-2 rounded focus:outline-none h-32"></textarea>
                     </div>
                     <div>
-                        <label for="author" class="block text-gray-300">Автор</label>
-                        <input type="text" id="author" name="author" required
-                               class="w-full px-3 py-1 bg-gray-700 text-white rounded">
+                        <label for="author" class="block">Автор</label>
+                        <input type="text" id="author" name="author" placeholder="Введите автора" required
+                               class="w-full px-4 py-2 rounded focus:outline-none">
                     </div>
-                    <div>
-                        <label for="category_id" class="block text-gray-300">Категория</label>
-                        <select id="category_id" name="category_id"
-                                class="w-full px-3 py-1 bg-gray-700 text-white rounded">
-                            <option value="">Без категории</option>
-                            <?php foreach ($article->getCategories() as $cat): ?>
-                                <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <button type="submit" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700">
+                    <button type="submit" class="py-2 px-6 rounded">
                         <i class="fas fa-plus"></i> Добавить
                     </button>
                 </form>
-
-                <h3 class="text-lg font-semibold text-gray-300 mb-3">Список статей</h3>
-                <?php $articles = $article->getAll(); ?>
-                <?php if (empty($articles)): ?>
-                    <p class="text-gray-500">Статьи отсутствуют.</p>
-                <?php else: ?>
-                    <?php foreach ($articles as $art): ?>
-                        <div class="bg-gray-700 rounded-lg p-4 mb-4">
-                            <h4 class="text-lg font-semibold text-pink-600"><?= htmlspecialchars($art['title']) ?></h4>
-                            <form method="POST" action="" class="space-y-4">
+                <h3 class="text-xl font-semibold mb-4">Существующие статьи</h3>
+                <div class="space-y-6">
+                    <?php foreach ($article->getAll() as $art): ?>
+                        <div class="article-card rounded-lg p-6">
+                            <h4 class="text-lg font-semibold"><?= htmlspecialchars($art['title']) ?></h4>
+                            <form method="POST" action="?action=update" class="space-y-4">
                                 <input type="hidden" name="id" value="<?= $art['id'] ?>">
                                 <div>
-                                    <label for="title-<?= $art['id'] ?>" class="block text-gray-300">Заголовок</label>
+                                    <label for="title-<?= $art['id'] ?>" class="block">Заголовок</label>
                                     <input type="text" id="title-<?= $art['id'] ?>" name="title" value="<?= htmlspecialchars($art['title']) ?>" required
-                                           class="w-full px-3 py-1 bg-gray-600 text-white rounded">
+                                           class="w-full px-4 py-2 rounded focus:outline-none">
                                 </div>
                                 <div>
-                                    <label for="description-<?= $art['id'] ?>" class="block text-gray-300">Описание</label>
+                                    <label for="description-<?= $art['id'] ?>" class="block">Описание</label>
                                     <textarea id="description-<?= $art['id'] ?>" name="description" required
-                                              class="w-full px-3 py-1 bg-gray-600 text-white rounded h-24"><?= htmlspecialchars($art['description']) ?></textarea>
+                                              class="w-full px-4 py-2 rounded focus:outline-none h-32"><?= htmlspecialchars($art['description']) ?></textarea>
                                 </div>
                                 <div>
-                                    <label for="author-<?= $art['id'] ?>" class="block text-gray-300">Автор</label>
+                                    <label for="author-<?= $art['id'] ?>" class="block">Автор</label>
                                     <input type="text" id="author-<?= $art['id'] ?>" name="author" value="<?= htmlspecialchars($art['author']) ?>" required
-                                           class="w-full px-3 py-1 bg-gray-600 text-white rounded">
-                                </div>
-                                <div>
-                                    <label for="category_id-<?= $art['id'] ?>" class="block text-gray-300">Категория</label>
-                                    <select id="category_id-<?= $art['id'] ?>" name="category_id"
-                                            class="w-full px-3 py-1 bg-gray-600 text-white rounded">
-                                        <option value="">Без категории</option>
-                                        <?php foreach ($article->getCategories() as $cat): ?>
-                                            <option value="<?= $cat['id'] ?>" <?= $art['category_id'] == $cat['id'] ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($cat['name']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                           class="w-full px-4 py-2 rounded focus:outline-none">
                                 </div>
                                 <div class="flex space-x-4">
-                                    <button type="submit" class="bg-pink-600 text-white px-3 py-1 rounded hover:bg-pink-700">
-                                        <i class="fas fa-edit"></i> Сохранить
+                                    <button type="submit" class="py-2 px-4 rounded">
+                                        <i class="fas fa-edit"></i> Редактировать
                                     </button>
-                                    <a href="?action=delete&id=<?= $art['id'] ?>" onclick="return confirm('Удалить?')"
-                                       class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                                    <a href="?action=delete&id=<?= $art['id'] ?>" onclick="return confirm('Действительно удалить?')"
+                                       class="py-2 px-4 rounded">
                                         <i class="fas fa-trash"></i> Удалить
                                     </a>
                                 </div>
                             </form>
                         </div>
-                    <?php endforeach;
-                endif; ?>
+                    <?php endforeach; ?>
+                </div>
             </div>
 
         <?php else: ?>
-            <div class="text-center mt-10">
-                <p class="text-xl text-red-500">Доступ запрещён</p>
-                <a href="?action=list" class="text-pink-600 hover:underline">На главную</a>
+            <div class="text-center">
+                <p class="text-xl">Доступ запрещён</p>
+                <a href="?action=list" class="hover:underline">На главную</a>
             </div>
         <?php endif; ?>
     </main>
 
-    <footer class="bg-gray-800 py-4 mt-8 text-center text-gray-500">
-        <p>© 2025 Поп-культура</p>
+    <footer class="bg-gray-800 py-4 mt-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>© 2025 Поп-культура. Все права защищены.</p>
+        </div>
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const notification = document.getElementById('notification');
-            if (notification) {
-                setTimeout(() => notification.style.opacity = '0', 2500);
-                setTimeout(() => notification.remove(), 2800);
-            }
+        const themeSwitcher = document.querySelector('.theme-switcher');
+        const themeOptions = document.querySelectorAll('.theme-option');
+
+        themeSwitcher.addEventListener('click', () => {
+            const options = themeSwitcher.querySelector('.theme-options');
+            options.style.display = options.style.display === 'block' ? 'none' : 'block';
         });
+
+        themeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const theme = option.getAttribute('data-theme');
+                document.body.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+            });
+        });
+
+        // Применяем сохраненную тему или синюю по умолчанию
+        const savedTheme = localStorage.getItem('theme') || 'blue';
+        document.body.setAttribute('data-theme', savedTheme);
     </script>
 </body>
 </html>

@@ -92,7 +92,6 @@ if ($action === 'login' && $method === 'POST') {
                         <i class="fas fa-sign-in-alt"></i> Войти
                     </a>
                 <?php endif; ?>
-                <!-- Переключатель тем -->
                 <div class="theme-switcher">
                     <i class="fas fa-palette"></i>
                     <div class="theme-options">
@@ -138,7 +137,7 @@ if ($action === 'login' && $method === 'POST') {
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>
-                        <div class="mt-4">
+                        <div class="comments-section">
                             <h4 class="text-lg font-semibold">Комментарии</h4>
                             <?php foreach ($article->getComments($art['id']) as $comment): ?>
                                 <div class="p-2 rounded mt-2">

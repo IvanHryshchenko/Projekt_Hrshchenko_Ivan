@@ -96,11 +96,41 @@ nav {
     border-radius: 8px;
     padding: 20px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    max-height: 600px; /* Ограничиваем высоту карточки */
+    overflow: hidden; /* Скрываем содержимое, выходящее за пределы */
 }
 
 .article-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--neon-glow);
+}
+
+/* Стили для области комментариев */
+.comments-section {
+    max-height: 200px; /* Ограничиваем высоту области комментариев */
+    overflow-y: auto; /* Включаем прокрутку по вертикали */
+    margin-top: 10px;
+    padding-right: 10px; /* Отступ для скроллбара */
+}
+
+/* Кастомизация скроллбара */
+.comments-section::-webkit-scrollbar {
+    width: 8px;
+}
+
+.comments-section::-webkit-scrollbar-track {
+    background: var(--input-background);
+    border-radius: 4px;
+}
+
+.comments-section::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 4px;
+}
+
+.comments-section::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+    opacity: 0.8;
 }
 
 /* Стили для кнопок и ссылок */
@@ -126,12 +156,13 @@ input, textarea {
     border-radius: 5px;
     padding: 10px;
     width: 100%;
+    box,line_number: 156
     box-sizing: border-box;
 }
 
 textarea {
     height: 120px;
-    resize: none;
+    resize: none; /* Запрещаем изменение размера */
 }
 
 /* Стили для переключателя тем */

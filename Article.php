@@ -17,18 +17,18 @@ class Article {
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
     
-    public function create(string $title, string $content, string $author): bool {
+    public function create(string $title, string $description, string $author): bool {
         $stmt = $this->db->getPdo()->prepare(
-            "INSERT INTO articles (title, content, author, created_at) VALUES (?, ?, ?, NOW())"
+            "INSERT INTO articles (title, description, author, created_at) VALUES (?, ?, ?, NOW())"
         );
-        return $stmt->execute([$title, $content, $author]);
+        return $stmt->execute([$title, $description, $author]);
     }
     
-    public function update(int $id, string $title, string $content, string $author): bool {
+    public function update(int $id, string $title, string $description, string $author): bool {
         $stmt = $this->db->getPdo()->prepare(
-            "UPDATE articles SET title = ?, content = ?, author = ? WHERE id = ?"
+            "UPDATE articles SET title = ?, description = ?, author = ? WHERE id = ?"
         );
-        return $stmt->execute([$title, $content, $author, $id]);
+        return $stmt->execute([$title, $description, $author, $id]);
     }
     
     public function delete(int $id): bool {

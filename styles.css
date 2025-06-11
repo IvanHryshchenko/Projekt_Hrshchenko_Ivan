@@ -1,56 +1,24 @@
-/* Кастомные цвета */
 :root {
-    --neon-pink: #ff2e63;
-    --neon-pink-dark: #e01e53;
+    --pink-600: #ec4899;
+    --gray-800: #1f2937;
 }
 
-/* Фон с градиентом */
 body {
-    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    background: linear-gradient(135deg, #111827, #374151);
 }
 
-/* Неоновый эффект для заголовков */
-h1, h2, h3, h4 {
-    text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
+h1, h2, h3 {
+    color: var(--pink-600);
 }
 
-/* Карточка статьи */
-.article-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.bg-gray-800 {
+    background-color: var(--gray-800);
 }
 
-.article-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0 15px var(--neon-pink);
+.hover\:bg-pink-700:hover {
+    background-color: #db2777;
 }
 
-/* Анимация для кнопок */
-button, a.bg-neon-pink, a.bg-red-500 {
-    position: relative;
-    overflow: hidden;
-}
-
-button::after, a.bg-neon-pink::after, a.bg-red-500::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.3),
-        transparent
-    );
-    transition: 0.5s;
-}
-
-button:hover::after, a.bg-neon-pink:hover::after, a.bg-red-500:hover::after {
-    left: 100%;
-}
-
-/* Усечение текста для описания */
 .line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -58,15 +26,19 @@ button:hover::after, a.bg-neon-pink:hover::after, a.bg-red-500:hover::after {
     overflow: hidden;
 }
 
-/* Адаптивность для маленьких экранов */
+.transition {
+    transition: all 0.3s ease;
+}
+
+.shadow-lg {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.hover\:shadow-lg:hover {
+    box-shadow: 0 15px 25px rgba(236, 72, 153, 0.3);
+}
+
 @media (max-width: 640px) {
-    h1 {
-        font-size: 1.5rem;
-    }
-    h2 {
-        font-size: 1.75rem;
-    }
-    .article-card {
-        padding: 1rem;
-    }
+    h2 { font-size: 1.5rem; }
+    .grid { grid-template-columns: 1fr; }
 }

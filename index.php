@@ -137,24 +137,28 @@ if ($action === 'login' && $method === 'POST') {
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>
-                        <div class="comments-section">
-                            <h4 class="text-lg font-semibold">Комментарии</h4>
-                            <?php foreach ($article->getComments($art['id']) as $comment): ?>
-                                <div class="p-2 rounded mt-2">
-                                    <p><?= htmlspecialchars($comment['content']) ?></p>
-                                    <p class="text-sm">
-                                        <i class="fas fa-user"></i> <?= htmlspecialchars($comment['username']) ?> | 
-                                        <i class="fas fa-calendar"></i> <?= $comment['created_at'] ?>
-                                    </p>
-                                </div>
-                            <?php endforeach; ?>
+                        <div class="mt-4">
+                            <div class="comments-section">
+                                <h4 class="text-lg font-semibold">Комментарии</h4>
+                                <?php foreach ($article->getComments($art['id']) as $comment): ?>
+                                    <div class="p-2 rounded mt-2">
+                                        <p><?= htmlspecialchars($comment['content']) ?></p>
+                                        <p class="text-sm">
+                                            <i class="fas fa-user"></i> <?= htmlspecialchars($comment['username']) ?> | 
+                                            <i class="fas fa-calendar"></i> <?= $comment['created_at'] ?>
+                                        </p>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
                             <?php if ($auth->isLoggedIn()): ?>
-                                <form method="POST" action="?action=comment&id=<?= $art['id'] ?>" class="mt-2">
-                                    <textarea name="content" placeholder="Ваш комментарий" required></textarea>
-                                    <button type="submit" class="mt-2 py-2 px-4 rounded">
-                                        <i class="fas fa-comment"></i> Добавить
-                                    </button>
-                                </form>
+                                <div class="comment-form">
+                                    <form method="POST" action="?action=comment&id=<?= $art['id'] ?>">
+                                        <textarea name="content" placeholder="Ваш комментарий" required></textarea>
+                                        <button type="submit">
+                                            <i class="fas fa-comment"></i> Добавить
+                                        </button>
+                                    </form>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </div>

@@ -98,6 +98,7 @@ nav {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     max-height: 600px; /* Ограничиваем высоту карточки */
     overflow: hidden; /* Скрываем содержимое, выходящее за пределы */
+    position: relative; /* Для позиционирования дочерних элементов */
 }
 
 .article-card:hover {
@@ -110,7 +111,9 @@ nav {
     max-height: 200px; /* Ограничиваем высоту области комментариев */
     overflow-y: auto; /* Включаем прокрутку по вертикали */
     margin-top: 10px;
+    margin-bottom: 120px; /* Отступ для формы ввода */
     padding-right: 10px; /* Отступ для скроллбара */
+    scroll-behavior: smooth; /* Плавная прокрутка */
 }
 
 /* Кастомизация скроллбара */
@@ -133,6 +136,45 @@ nav {
     opacity: 0.8;
 }
 
+/* Стили для формы ввода комментариев */
+.comment-form {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--card-background);
+    padding-top: 10px;
+    z-index: 10; /* Форма выше прокручиваемых комментариев */
+}
+
+.comment-form textarea {
+    background-color: var(--input-background);
+    color: var(--text-color);
+    border: 1px solid var(--accent-color);
+    border-radius: 5px;
+    padding: 10px;
+    width: 100%;
+    height: 80px; /* Фиксированная высота */
+    resize: none; /* Запрещаем изменение размера */
+    box-sizing: border-box;
+    font-size: 14px;
+    box-shadow: var(--neon-glow);
+}
+
+.comment-form button {
+    background-color: var(--accent-color);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 5px;
+    border: none;
+    text-shadow: var(--neon-glow);
+    transition: box-shadow 0.3s ease;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.comment-form button:hover {
+    box-shadow: var(--neon-glow);
+}
+
 /* Стили для кнопок и ссылок */
 button, a.bg-neon-pink, a.bg-red-500 {
     background-color: var(--accent-color);
@@ -148,21 +190,15 @@ button:hover, a.bg-neon-pink:hover, a.bg-red-500:hover {
     box-shadow: var(--neon-glow);
 }
 
-/* Стили для поля ввода и текстового поля */
-input, textarea {
+/* Стили для поля ввода */
+input {
     background-color: var(--input-background);
     color: var(--text-color);
     border: 1px solid var(--accent-color);
     border-radius: 5px;
     padding: 10px;
     width: 100%;
-    box,line_number: 156
     box-sizing: border-box;
-}
-
-textarea {
-    height: 120px;
-    resize: none; /* Запрещаем изменение размера */
 }
 
 /* Стили для переключателя тем */
@@ -231,5 +267,8 @@ textarea {
     }
     .theme-options {
         min-width: 120px;
+    }
+    .comment-form textarea {
+        height: 60px; /* Меньшая высота на мобильных */
     }
 }

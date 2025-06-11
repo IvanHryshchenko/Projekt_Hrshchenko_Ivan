@@ -1,7 +1,7 @@
 /* Определение кастомных цветов для тем */
 body[data-theme="black-red"] {
     --background-color: #000000;
-    --text-color: #ff0000;
+    --text-color: #ff5555; /* Более яркий красный для контраста */
     --accent-color: #ff0000;
     --neon-glow: 0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000;
     --card-background: #1a1a1a;
@@ -10,7 +10,7 @@ body[data-theme="black-red"] {
 
 body[data-theme="blue"] {
     --background-color: #000033;
-    --text-color: #00ccff;
+    --text-color: #66d9ff; /* Более яркий голубой для контраста */
     --accent-color: #00ccff;
     --neon-glow: 0 0 10px #00ccff, 0 0 20px #00ccff, 0 0 30px #00ccff;
     --card-background: #1a1a33;
@@ -19,7 +19,7 @@ body[data-theme="blue"] {
 
 body[data-theme="green"] {
     --background-color: #003300;
-    --text-color: #00ff00;
+    --text-color: #66ff99; /* Более яркий зеленый для контраста */
     --accent-color: #00ff00;
     --neon-glow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00;
     --card-background: #1a331a;
@@ -28,7 +28,7 @@ body[data-theme="green"] {
 
 body[data-theme="purple"] {
     --background-color: #330033;
-    --text-color: #cc00ff;
+    --text-color: #ff66ff; /* Более яркий фиолетовый для контраста */
     --accent-color: #cc00ff;
     --neon-glow: 0 0 10px #cc00ff, 0 0 20px #cc00ff, 0 0 30px #cc00ff;
     --card-background: #331a33;
@@ -37,7 +37,7 @@ body[data-theme="purple"] {
 
 body[data-theme="yellow"] {
     --background-color: #333300;
-    --text-color: #ffff00;
+    --text-color: #ffff66; /* Более яркий желтый для контраста */
     --accent-color: #ffff00;
     --neon-glow: 0 0 10px #ffff00, 0 0 20px #ffff00, 0 0 30px #ffff00;
     --card-background: #33331a;
@@ -46,7 +46,7 @@ body[data-theme="yellow"] {
 
 body[data-theme="orange"] {
     --background-color: #331100;
-    --text-color: #ff6600;
+    --text-color: #ff9966; /* Более яркий оранжевый для контраста */
     --accent-color: #ff6600;
     --neon-glow: 0 0 10px #ff6600, 0 0 20px #ff6600, 0 0 30px #ff6600;
     --card-background: #331a1a;
@@ -55,7 +55,7 @@ body[data-theme="orange"] {
 
 body[data-theme="pink"] {
     --background-color: #330022;
-    --text-color: #ff00cc;
+    --text-color: #ff66cc; /* Более яркий розовый для контраста */
     --accent-color: #ff00cc;
     --neon-glow: 0 0 10px #ff00cc, 0 0 20px #ff00cc, 0 0 30px #ff00cc;
     --card-background: #331a2a;
@@ -64,7 +64,7 @@ body[data-theme="pink"] {
 
 body[data-theme="cyan"] {
     --background-color: #003333;
-    --text-color: #00ffff;
+    --text-color: #66ffff; /* Более яркий голубой для контраста */
     --accent-color: #00ffff;
     --neon-glow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff;
     --card-background: #1a3333;
@@ -96,9 +96,12 @@ nav {
     border-radius: 8px;
     padding: 20px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    max-height: 600px; /* Ограничиваем высоту карточки */
-    overflow: hidden; /* Скрываем содержимое, выходящее за пределы */
-    position: relative; /* Для позиционирования дочерних элементов */
+    max-height: 600px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .article-card:hover {
@@ -108,12 +111,14 @@ nav {
 
 /* Стили для области комментариев */
 .comments-section {
-    max-height: 200px; /* Ограничиваем высоту области комментариев */
-    overflow-y: auto; /* Включаем прокрутку по вертикали */
+    min-height: 200px;
+    max-height: 300px;
+    overflow-y: auto;
     margin-top: 10px;
-    margin-bottom: 120px; /* Отступ для формы ввода */
-    padding-right: 10px; /* Отступ для скроллбара */
-    scroll-behavior: smooth; /* Плавная прокрутка */
+    padding-right: 10px;
+    scroll-behavior: smooth;
+    flex-grow: 1;
+    display: block;
 }
 
 /* Кастомизация скроллбара */
@@ -139,10 +144,15 @@ nav {
 /* Стили для формы ввода комментариев */
 .comment-form {
     position: sticky;
-    bottom: 0;
+    bottom: 20px;
     background-color: var(--card-background);
     padding-top: 10px;
-    z-index: 10; /* Форма выше прокручиваемых комментариев */
+    z-index: 10;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    width: 100%;
 }
 
 .comment-form textarea {
@@ -152,11 +162,13 @@ nav {
     border-radius: 5px;
     padding: 10px;
     width: 100%;
-    height: 80px; /* Фиксированная высота */
-    resize: none; /* Запрещаем изменение размера */
+    height: 60px;
+    resize: none;
     box-sizing: border-box;
     font-size: 14px;
     box-shadow: var(--neon-glow);
+    overflow-y: auto;
+    word-wrap: break-word;
 }
 
 .comment-form button {
@@ -254,6 +266,124 @@ input {
     overflow: hidden;
 }
 
+/* Стили для админ-панели */
+.admin-panel {
+    background-color: var(--card-background);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: var(--neon-glow);
+}
+
+.admin-panel h3 {
+    color: var(--accent-color);
+    text-shadow: var(--neon-glow);
+    margin-bottom: 15px;
+}
+
+.admin-panel form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.admin-panel label {
+    color: var(--text-color); /* Улучшенная контрастность */
+    font-weight: 600;
+}
+
+.admin-panel input, .admin-panel textarea {
+    background-color: var(--input-background);
+    color: var(--text-color); /* Улучшенная контрастность */
+    border: 1px solid var(--accent-color);
+    border-radius: 5px;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: var(--neon-glow);
+}
+
+.admin-panel textarea {
+    height: 150px;
+    resize: vertical;
+}
+
+.admin-panel button {
+    background-color: var(--accent-color);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    text-shadow: var(--neon-glow);
+    transition: box-shadow 0.3s ease;
+    width: 100%;
+}
+
+.admin-panel button:hover {
+    box-shadow: var(--neon-glow);
+}
+
+.admin-article-card {
+    background-color: var(--card-background);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: var(--neon-glow);
+}
+
+.admin-article-card h4 {
+    color: var(--accent-color);
+    text-shadow: var(--neon-glow);
+    margin-bottom: 10px;
+}
+
+.admin-article-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-article-card label {
+    color: var(--text-color); /* Улучшенная контрастность */
+    font-weight: 600;
+}
+
+.admin-article-card input, .admin-article-card textarea {
+    background-color: var(--input-background);
+    color: var(--text-color); /* Улучшенная контрастность */
+    border: 1px solid var(--accent-color);
+    border-radius: 5px;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: var(--neon-glow);
+}
+
+.admin-article-card textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.admin-article-card button, .admin-article-card a {
+    background-color: var(--accent-color);
+    color: #fff;
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+    text-shadow: var(--neon-glow);
+    transition: box-shadow 0.3s ease;
+    width: 48%;
+    text-align: center;
+}
+
+.admin-article-card button:hover, .admin-article-card a:hover {
+    box-shadow: var(--neon-glow);
+}
+
+.admin-article-card .flex {
+    display: flex;
+    gap: 10px;
+}
+
 /* Адаптивность */
 @media (max-width: 640px) {
     h1 {
@@ -268,7 +398,23 @@ input {
     .theme-options {
         min-width: 120px;
     }
+    .comments-section {
+        min-height: 150px;
+        max-height: 200px;
+    }
+    .comment-form {
+        height: 80px;
+    }
     .comment-form textarea {
-        height: 60px; /* Меньшая высота на мобильных */
+        height: 40px;
+    }
+    .admin-panel, .admin-article-card {
+        padding: 10px;
+    }
+    .admin-article-card .flex {
+        flex-direction: column;
+    }
+    .admin-article-card button, .admin-article-card a {
+        width: 100%;
     }
 }
